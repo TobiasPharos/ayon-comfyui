@@ -153,6 +153,18 @@ class ComfyLocalSettings:
             return launch_args
 
         @property
+        @template_wrap
+        def directory_launch_args(self) -> list[str]:
+            """Return directory-related launch argument key/value pairs."""
+            args = []
+            for arg in self._get_launch_profile_setting("launch_args"):
+                key = arg.get("key") or ""
+                value = arg.get("value") or ""
+                if "directory" in key.casefold():
+                    args.extend([key, value])
+            return args
+
+        @property
         def name(self) -> str:
             """Returns configuration name."""
             return self._name

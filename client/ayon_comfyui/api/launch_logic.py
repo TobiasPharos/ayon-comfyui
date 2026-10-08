@@ -179,6 +179,33 @@ def _subproc_launch_ComfyUI() -> subprocess.Popen:
     log.info("Comfy Folder:")
     log.info(comfy_main_location)
 
+    directory_args = profile.directory_launch_args
+    for index in range(0, len(directory_args), 2):
+        argument = directory_args[index]
+        directory = directory_args[index + 1]
+        if not directory.strip():
+            log.warning(
+                "Directory launch argument %s has no directory value",
+                argument,
+            )
+            continue
+
+        directory_path = Path(directory)
+        if not directory_path.is_absolute():
+            directory_path = Path(profile.base_folder) / directory_path
+
+        try:
+            if directory_path.exists() and not directory_path.is_dir():
+                raise NotADirectoryError(directory_path)
+            directory_path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            log.warning(
+                "Could not prepare directory %s for launch argument %s: %s",
+                directory_path,
+                argument,
+                exc,
+            )
+
     # win only for now ?
     args = [
         *shell_args,
