@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 from urllib.parse import ParseResult, urlparse
 
@@ -14,7 +15,7 @@ from ayon_comfyui.api.connection_util import (
 )
 from ayon_comfyui.settings_util import ComfyUICustomDirectories
 
-from .template_helper import template_wrap
+from .template_helper import apply_template, template_wrap
 
 DEFAULT_T = TypeVar("DEFAULT_T")
 
@@ -153,15 +154,18 @@ class ComfyLocalSettings:
             return launch_args
 
         @property
-        @template_wrap
-        def directory_launch_args(self) -> list[str]:
+        def directory_launch_args(self) -> dict[str, Path]:
             """Return directory-related launch argument key/value pairs."""
-            args = []
+            args = {}
             for arg in self._get_launch_profile_setting("launch_args"):
-                key = arg.get("key") or ""
-                value = arg.get("value") or ""
-                if "directory" in key.casefold():
-                    args.extend([key, value])
+                key = arg.get("key")
+                value = arg.get("value")
+                if key and "directory" in key.casefold():
+                    try:
+                        path = Path(apply_template(value))
+                        args[key.strip("-")] = path
+                    except Exception:
+                        pass
             return args
 
         @property

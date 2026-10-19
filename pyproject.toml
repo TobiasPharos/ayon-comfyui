@@ -7,7 +7,7 @@
 
 [project]
 name = "ayon-comfyui"
-version = "0.1.0"
+version = "0.0.28+pha.4"
 description = "AYON ComfyUI integration"
 license = "Apache-2.0"
 readme = "README.md"
@@ -23,4 +23,9 @@ dev = [
     "mypy", 
     "isort", 
     "pre-commit"
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
 ]

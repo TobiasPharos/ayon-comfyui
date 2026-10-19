@@ -74,6 +74,37 @@ def adjust_consts_comfyui_plugin(plugin_path: Path) -> None:
     Path(js_file).write_text(js, encoding="utf-8")
 
 
+def create_missing_directories(
+    profile: (
+        ComfyRemoteSettings.ComfyRemoteProfile
+        | ComfyLocalSettings.ComfyLocalProfile
+    ),
+) -> None:
+    """Create missing directories specified in profile's launch arguments."""
+    directory_args = profile.directory_launch_args
+    for argument, directory in directory_args.items():
+        if not directory.is_absolute():
+            log.warning(
+                (
+                    "Directory \"%s\" for launch argument %s is not absolute. "
+                    "Will not create it."
+                ),
+                directory,
+                argument,
+            )
+            continue
+
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            log.warning(
+                "Could not prepare directory %s for launch argument %s: %s",
+                directory,
+                argument,
+                exc,
+            )
+
+
 def _subproc_launch_ComfyUI() -> subprocess.Popen:
     """Launch local profile.
 
@@ -179,32 +210,7 @@ def _subproc_launch_ComfyUI() -> subprocess.Popen:
     log.info("Comfy Folder:")
     log.info(comfy_main_location)
 
-    directory_args = profile.directory_launch_args
-    for index in range(0, len(directory_args), 2):
-        argument = directory_args[index]
-        directory = directory_args[index + 1]
-        if not directory.strip():
-            log.warning(
-                "Directory launch argument %s has no directory value",
-                argument,
-            )
-            continue
-
-        directory_path = Path(directory)
-        if not directory_path.is_absolute():
-            directory_path = Path(profile.base_folder) / directory_path
-
-        try:
-            if directory_path.exists() and not directory_path.is_dir():
-                raise NotADirectoryError(directory_path)
-            directory_path.mkdir(parents=True, exist_ok=True)
-        except OSError as exc:
-            log.warning(
-                "Could not prepare directory %s for launch argument %s: %s",
-                directory_path,
-                argument,
-                exc,
-            )
+    create_missing_directories(profile)
 
     # win only for now ?
     args = [

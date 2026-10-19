@@ -174,3 +174,4 @@ package
 *.cert
 *.crt
 *.key
+/tests
